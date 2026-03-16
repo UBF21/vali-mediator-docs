@@ -1,0 +1,11 @@
+{
+  "link.item.label.Introduction": { "message": "Introducción" },
+  "link.item.label.Quick Start": { "message": "Inicio Rápido" },
+  "link.item.label.Resilience": { "message": "Resiliencia" },
+  "link.item.label.Caching": { "message": "Caché" },
+  "link.item.label.GitHub": { "message": "GitHub" },
+  "link.item.label.Vali-Validation": { "message": "Vali-Validation" },
+  "copyright": {
+    "message": "Copyright © {currentYear} Felipe Montenegro. Construido con Docusaurus."
+  }
+}

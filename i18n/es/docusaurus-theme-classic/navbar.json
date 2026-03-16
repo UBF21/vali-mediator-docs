@@ -1,0 +1,18 @@
+{
+  "title": {
+    "message": "Vali-Mediator",
+    "description": "The title in the navbar"
+  },
+  "item.label.Docs": {
+    "message": "Documentación",
+    "description": "Navbar item with label Docs"
+  },
+  "item.label.NuGet": {
+    "message": "NuGet",
+    "description": "Navbar item with label NuGet"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  }
+}
