@@ -34,6 +34,34 @@ const config: Config = {
     },
   },
 
+  headTags: [
+    {
+      tagName: 'link',
+      attributes: { rel: 'canonical', href: 'https://ubf21.github.io/' },
+    },
+    {
+      tagName: 'script',
+      attributes: { type: 'application/ld+json' },
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'Vali-Mediator',
+        applicationCategory: 'DeveloperApplication',
+        operatingSystem: 'Any',
+        description: 'Lightweight .NET mediator library enabling clean CQRS patterns with built-in resilience, caching, and observability.',
+        url: 'https://www.nuget.org/packages/Vali-Mediator',
+        downloadUrl: 'https://www.nuget.org/packages/Vali-Mediator',
+        author: {
+          '@type': 'Person',
+          name: 'Felipe Rafael Montenegro Morriberon',
+          url: 'https://www.linkedin.com/in/felipe-rafael-montenegro-morriberon-a79a341b2/',
+        },
+        programmingLanguage: 'C#',
+        license: 'https://opensource.org/licenses/MIT',
+      }),
+    },
+  ],
+
   presets: [
     [
       'classic',
@@ -51,6 +79,26 @@ const config: Config = {
   ],
 
   themeConfig: {
+    image: 'img/logo.png',
+    metadata: [
+      { name: 'description', content: 'Vali-Mediator is a lightweight mediator library for .NET that enables clean CQRS patterns with built-in resilience, caching, and observability support.' },
+      { name: 'keywords', content: 'Vali-Mediator, dotnet, .NET mediator, CQRS, command handler, query handler, resilience, caching, observability, NuGet, C# mediator library' },
+      { name: 'author', content: 'Felipe Rafael Montenegro Morriberon' },
+      { name: 'robots', content: 'index, follow, max-image-preview:large' },
+      { name: 'theme-color', content: '#0ea5e9' },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:site_name', content: 'Vali-Mediator Docs' },
+      { property: 'og:title', content: 'Vali-Mediator — Communication Core for .NET' },
+      { property: 'og:description', content: 'Lightweight .NET mediator library for clean CQRS patterns with built-in resilience, caching, and observability. Available on NuGet.' },
+      { property: 'og:url', content: 'https://ubf21.github.io/' },
+      { property: 'og:image', content: 'https://ubf21.github.io/img/logo.png' },
+      { property: 'og:locale', content: 'en_US' },
+      { property: 'og:locale:alternate', content: 'es_ES' },
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:title', content: 'Vali-Mediator — Communication Core for .NET' },
+      { name: 'twitter:description', content: 'Lightweight .NET mediator library for clean CQRS patterns with resilience, caching, and observability. Available on NuGet.' },
+      { name: 'twitter:image', content: 'https://ubf21.github.io/img/logo.png' },
+    ],
     colorMode: { defaultMode: 'light', respectPrefersColorScheme: true },
     navbar: {
       title: 'Vali-Mediator',

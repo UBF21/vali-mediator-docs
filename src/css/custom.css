@@ -146,6 +146,102 @@ code, kbd, pre, samp {
 [data-theme='dark'] .navbar__link--active { color: #06b6d4; }
 
 /* ─────────────────────────────────────────────
+   NAVBAR MOBILE SIDEBAR — full-height drawer
+   ───────────────────────────────────────────── */
+.navbar-sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  height: 100dvh !important;
+  width: 83vw !important;
+  max-width: 320px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  z-index: 200 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  justify-content: flex-start !important;
+}
+
+.navbar-sidebar__brand {
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 1rem !important;
+  margin: 0 !important;
+  height: var(--ifm-navbar-height) !important;
+  min-height: var(--ifm-navbar-height) !important;
+  max-height: var(--ifm-navbar-height) !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+  order: -1 !important;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.15);
+  box-sizing: border-box !important;
+}
+
+.navbar-sidebar__items {
+  flex: 1 !important;
+  /* No overflow-y here: allows transform:translate3d to slide the secondary
+     panel correctly. overflow-y:auto implicitly sets overflow-x:auto which
+     makes the browser compensate the translate with horizontal scroll. */
+  min-height: 0;
+}
+
+/* Scroll goes on each individual panel, not the sliding container */
+.navbar-sidebar__item {
+  padding: 0 !important;
+  overflow-y: auto !important;
+  height: 100% !important;
+}
+
+body:has(.navbar-sidebar--show) {
+  overflow: hidden !important;
+}
+
+[data-theme='light'] .navbar-sidebar {
+  background: #ffffff;
+  border-right: 1px solid rgba(37, 99, 235, 0.12);
+}
+
+[data-theme='dark'] .navbar-sidebar {
+  background: #080a0e;
+  border-right: 1px solid rgba(6, 182, 212, 0.12);
+}
+
+/* ─────────────────────────────────────────────
+   SIDEBAR MOBILE — responsive widths
+   ───────────────────────────────────────────── */
+
+@media (max-width: 379px) {
+  :root { --ifm-navbar-sidebar-width: 92vw; }
+  .navbar-sidebar { width: 92vw !important; max-width: 92vw !important; }
+}
+
+@media (min-width: 380px) and (max-width: 640px) {
+  :root { --ifm-navbar-sidebar-width: 83vw; }
+  .navbar-sidebar { width: 83vw !important; max-width: 300px !important; }
+}
+
+@media (min-width: 641px) and (max-width: 767px) {
+  :root { --ifm-navbar-sidebar-width: 320px; }
+  .navbar-sidebar { width: 320px !important; max-width: 320px !important; }
+}
+
+@media (min-width: 768px) and (max-width: 996px) {
+  :root { --ifm-navbar-sidebar-width: 360px; }
+  .navbar-sidebar { width: 360px !important; max-width: 360px !important; }
+}
+
+@media (max-width: 996px) {
+  .navbar-sidebar__item .menu__link {
+    padding: 0.6rem 1rem !important;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* ─────────────────────────────────────────────
    SIDEBAR — premium panel
    ───────────────────────────────────────────── */
 .theme-doc-sidebar-container {
