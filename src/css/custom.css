@@ -48,9 +48,9 @@
   --docusaurus-highlighted-code-line-bg: rgba(6, 182, 212, 0.12);
 
   --ifm-background-color: #0a0a0a;
-  --ifm-navbar-background-color: transparent;
-  --ifm-footer-background-color: #000005;
-  --ifm-background-surface-color: #18181b;
+  --ifm-navbar-background-color: #0a0a0a;
+  --ifm-footer-background-color: #0a0a0a;
+  --ifm-background-surface-color: #0a0a0a;
 
   --vb-bg-doc: #0a0a0a;
   --vb-surface: #18181b;
@@ -72,12 +72,48 @@ code, kbd, pre, samp {
 }
 
 /* ─────────────────────────────────────────────
-   SCROLLBAR
+   SCROLLBAR — global (thin, neutral)
    ───────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(37, 99, 235, 0.3); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(37, 99, 235, 0.5); }
+::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.25); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.45); }
+
+/* ─────────────────────────────────────────────
+   SCROLLBAR — sidebar (premium styled)
+   ───────────────────────────────────────────── */
+.theme-doc-sidebar-container ::-webkit-scrollbar {
+  width: 4px;
+}
+.theme-doc-sidebar-container ::-webkit-scrollbar-track {
+  background: transparent;
+  margin-block: 8px;
+}
+.theme-doc-sidebar-container ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #2563eb 0%, #06b6d4 100%);
+  border-radius: 99px;
+  opacity: 0.6;
+}
+.theme-doc-sidebar-container ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #1d4ed8 0%, #0891b2 100%);
+  opacity: 1;
+}
+
+/* scrollbar-width para Firefox */
+.theme-doc-sidebar-container .menu {
+  scrollbar-width: thin;
+  scrollbar-color: #2563eb transparent;
+}
+
+[data-theme='light'] .theme-doc-sidebar-container ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(37,99,235,0.55) 0%, rgba(6,182,212,0.55) 100%);
+}
+[data-theme='light'] .theme-doc-sidebar-container ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(37,99,235,0.85) 0%, rgba(6,182,212,0.85) 100%);
+}
+[data-theme='light'] .theme-doc-sidebar-container .menu {
+  scrollbar-color: rgba(37,99,235,0.5) transparent;
+}
 
 /* ─────────────────────────────────────────────
    SELECTION
@@ -250,7 +286,7 @@ body:has(.navbar-sidebar--show) {
 }
 
 [data-theme='dark'] .theme-doc-sidebar-container {
-  background: linear-gradient(180deg, #080a0e 0%, #0a0d18 60%, #0c1020 100%);
+  background: #0a0a0a;
   border-right: 1px solid rgba(37, 99, 235, 0.1) !important;
 }
 
@@ -558,16 +594,42 @@ tbody tr:hover { background: rgba(37, 99, 235, 0.04); }
    ───────────────────────────────────────────── */
 .footer { background: #f0f4ff; border-top: 1px solid rgba(37, 99, 235, 0.1); }
 [data-theme='dark'] .footer { background: #000005; border-top: 1px solid rgba(37, 99, 235, 0.12); }
+
 .footer__title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: #1d4ed8; }
 [data-theme='dark'] .footer__title { color: #93c5fd; }
+
+.footer__link-item { color: #374151; }
+[data-theme='dark'] .footer__link-item { color: #94a3b8; }
+
 .footer__link-item:hover { color: #2563eb; text-decoration: none; }
 [data-theme='dark'] .footer__link-item:hover { color: #06b6d4; }
+
+.footer__copyright { color: #64748b; font-size: 0.85rem; }
+[data-theme='dark'] .footer__copyright { color: #475569; }
 
 /* ─────────────────────────────────────────────
    DOC PAGE LAYOUT
    ───────────────────────────────────────────── */
 .docMainContainer {
   background: linear-gradient(to bottom, rgba(37, 99, 235, 0.03), transparent 200px);
+}
+
+/* ─────────────────────────────────────────────
+   DRAW.IO DIAGRAMS
+   ───────────────────────────────────────────── */
+.docusaurus-plugin-drawio {
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 1.5rem 0;
+  border: 1px solid rgba(37, 99, 235, 0.15);
+}
+
+/* In dark mode the diagram lines are black so force a light background */
+[data-theme='dark'] .docusaurus-plugin-drawio {
+  background: #f8faff;
+  border-color: rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.1),
+              0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 /* ─────────────────────────────────────────────
@@ -611,4 +673,17 @@ tbody tr:hover { background: rgba(37, 99, 235, 0.04); }
 .feature-card:hover {
   box-shadow: 0 4px 20px rgba(6, 182, 212, 0.15);
   border-color: var(--vm-cyan);
+}
+
+/* ── DOC PAGE — uniform background ── */
+[data-theme='dark'] html,
+[data-theme='dark'] body,
+[data-theme='dark'] .main-wrapper,
+[data-theme='dark'] .docPage,
+[data-theme='dark'] .docMainContainer,
+[data-theme='dark'] .docItemContainer,
+[data-theme='dark'] .col.docItemCol,
+[data-theme='dark'] .theme-doc-markdown,
+[data-theme='dark'] article {
+  background-color: #0a0a0a !important;
 }
