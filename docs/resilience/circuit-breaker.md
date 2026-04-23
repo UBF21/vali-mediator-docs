@@ -3,20 +3,16 @@ id: circuit-breaker
 title: Circuit Breaker
 ---
 
+import Drawio from '@theme/Drawio';
+import circuitBreaker from '@site/static/diagrams/circuit-breaker.drawio';
+
 # Circuit Breaker
 
 The circuit breaker prevents calling a failing service repeatedly. After a threshold of failures, it "opens" the circuit and fast-fails requests until the service has time to recover.
 
 ## State Machine
 
-```mermaid
-stateDiagram-v2
-    [*] --> Closed
-    Closed --> Open: Failure threshold exceeded
-    Open --> HalfOpen: Break duration elapsed
-    HalfOpen --> Closed: Trial request succeeds
-    HalfOpen --> Open: Trial request fails
-```
+<Drawio content={circuitBreaker} />
 
 ## Basic Usage
 

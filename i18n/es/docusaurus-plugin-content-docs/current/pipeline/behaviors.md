@@ -3,23 +3,16 @@ id: behaviors
 title: Behaviors del Pipeline
 ---
 
+import Drawio from '@theme/Drawio';
+import pipelineBehaviors from '@site/static/diagrams/pipeline-behaviors.drawio';
+
 # Behaviors del Pipeline
 
 Los pipeline behaviors envuelven la ejecución del handler, habilitando preocupaciones transversales como logging, validación, caché y resiliencia — sin tocar el código del handler.
 
 ## El Modelo Cebolla
 
-```mermaid
-graph TD
-    Client --> B1["Behavior 1 (más externo)\nej. Logging"]
-    B1 --> B2["Behavior 2\nej. Validación"]
-    B2 --> B3["Behavior 3 (más interno)\nej. Caché"]
-    B3 --> Handler["Handler"]
-    Handler --> B3
-    B3 --> B2
-    B2 --> B1
-    B1 --> Client
-```
+<Drawio content={pipelineBehaviors} />
 
 **Primero registrado = más externo** (ejecuta primero antes del handler, último después).
 

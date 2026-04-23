@@ -3,6 +3,9 @@ id: invalidation
 title: Cache Invalidation
 ---
 
+import Drawio from '@theme/Drawio';
+import cacheInvalidation from '@site/static/diagrams/cache-invalidation.drawio';
+
 # Cache Invalidation
 
 Use `IInvalidatesCache` on any request to automatically invalidate cache entries when the request is processed.
@@ -69,13 +72,7 @@ public record DeleteProductCommand(Guid Id)
 
 Cache invalidation runs **after** the handler executes successfully. If the handler fails (returns `Result.Fail` or throws), the cache is NOT invalidated.
 
-```mermaid
-flowchart TD
-    Cmd["Command (IInvalidatesCache)"] --> Handler
-    Handler --> Success{Success?}
-    Success -->|Yes| Invalidate["Invalidate cache entries"]
-    Success -->|No| Skip["Cache unchanged"]
-```
+<Drawio content={cacheInvalidation} />
 
 ## Complete Write-Through Pattern
 

@@ -62,6 +62,22 @@ const config: Config = {
     },
   ],
 
+  plugins: [
+    'docusaurus-plugin-drawio',
+    function drawioWebpackLoader() {
+      return {
+        name: 'drawio-webpack-loader',
+        configureWebpack() {
+          return {
+            module: {
+              rules: [{ test: /\.drawio$/, type: 'asset/source' }],
+            },
+          };
+        },
+      };
+    },
+  ],
+
   presets: [
     [
       'classic',

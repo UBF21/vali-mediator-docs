@@ -3,6 +3,9 @@ id: overview
 title: Result Pattern
 ---
 
+import Drawio from '@theme/Drawio';
+import resultFlow from '@site/static/diagrams/result-flow.drawio';
+
 # Result Pattern
 
 Vali-Mediator includes a built-in **Result pattern** that models success and failure as values, eliminating the need to throw exceptions for expected business logic failures.
@@ -102,14 +105,7 @@ string message = result.Match(
 
 ## Result Flow
 
-```mermaid
-graph TD
-    Handler --> IsSuccess{IsSuccess?}
-    IsSuccess -->|Yes| Value["result.Value"]
-    IsSuccess -->|No| Error["result.Error\nresult.ErrorType\nresult.ValidationErrors"]
-    Value --> AspNetCore["ToActionResult() → 200 OK"]
-    Error --> AspNetCore2["ToActionResult() → 4xx/5xx"]
-```
+<Drawio content={resultFlow} />
 
 :::tip
 Return `Result<T>` from handlers instead of throwing exceptions for business logic failures. Reserve exceptions for unexpected runtime errors (null references, IO failures, etc.).

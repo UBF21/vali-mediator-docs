@@ -4,6 +4,9 @@ title: Introduction
 sidebar_label: Introduction
 ---
 
+import Drawio from '@theme/Drawio';
+import dispatchFlow from '@site/static/diagrams/dispatch-flow.drawio';
+
 # Vali-Mediator
 
 **Vali-Mediator** is a lightweight .NET library that implements the **Mediator pattern** with full CQRS support. It provides a clean separation between request senders and request handlers, a powerful pipeline for cross-cutting concerns, and a rich ecosystem of extension packages.
@@ -18,21 +21,7 @@ sidebar_label: Introduction
 
 ## Dispatch Flow
 
-```mermaid
-graph TD
-    Client["Client Code"] --> Mediator["IValiMediator"]
-    Mediator --> Pipeline["Pipeline\n(Behaviors + Processors)"]
-    Pipeline --> Handler["Handler"]
-    Handler --> Result["Result&lt;T&gt;"]
-    Result --> Client
-
-    Mediator --> NotifFanout["Notification Fan-out"]
-    NotifFanout --> H1["Handler 1"]
-    NotifFanout --> H2["Handler 2"]
-    NotifFanout --> H3["Handler N"]
-
-    Mediator --> Stream["IAsyncEnumerable&lt;T&gt;"]
-```
+<Drawio content={dispatchFlow} />
 
 ## Package Ecosystem
 

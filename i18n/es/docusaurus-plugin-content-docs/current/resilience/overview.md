@@ -3,6 +3,9 @@ id: overview
 title: Resumen de Resiliencia
 ---
 
+import Drawio from '@theme/Drawio';
+import resilienceOverview from '@site/static/diagrams/resilience-overview.drawio';
+
 # Resiliencia
 
 `Vali-Mediator.Resilience` proporciona un pipeline de resiliencia fluido y componible sin dependencias externas.
@@ -17,18 +20,7 @@ dotnet add package Vali-Mediator.Resilience
 
 Cuando se combinan múltiples políticas, se ejecutan en este orden fijo (más externo → más interno):
 
-```mermaid
-graph LR
-    Call["Tu Llamada"] --> Fallback
-    Fallback --> Chaos["Chaos"]
-    Chaos --> RateLimit["Rate Limiter"]
-    RateLimit --> Timeout["Timeout"]
-    Timeout --> CB["Circuit Breaker"]
-    CB --> Bulkhead["Bulkhead"]
-    Bulkhead --> Retry["Retry"]
-    Retry --> Hedge["Hedge"]
-    Hedge --> Handler["Tu Handler"]
-```
+<Drawio content={resilienceOverview} />
 
 **Fallback** siempre es el más externo — captura fallos de todas las políticas internas.
 **Hedge** es el más interno — ejecuta la operación real (potencialmente en paralelo).

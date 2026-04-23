@@ -3,6 +3,9 @@ id: bulkhead
 title: Bulkhead
 ---
 
+import Drawio from '@theme/Drawio';
+import bulkheadPolicy from '@site/static/diagrams/bulkhead-policy.drawio';
+
 # Bulkhead (Concurrency Limit)
 
 The bulkhead policy limits the number of concurrent executions and optionally queues excess requests. It prevents a single dependency from consuming all available resources.
@@ -17,16 +20,7 @@ var policy = ResiliencePolicy.Create()
 
 ## How It Works
 
-```mermaid
-graph TD
-    Requests["Incoming Requests"] --> Bulkhead
-    Bulkhead --> Active["Active Slot Available?\n(≤ maxConcurrent)"]
-    Active -->|Yes| Execute["Execute Immediately"]
-    Active -->|No| Queue["Queue Available?\n(≤ maxQueued)"]
-    Queue -->|Yes| Wait["Wait in Queue"]
-    Queue -->|No| Reject["Throw BulkheadRejectedException"]
-    Wait --> Execute
-```
+<Drawio content={bulkheadPolicy} />
 
 ## Configuration Options
 

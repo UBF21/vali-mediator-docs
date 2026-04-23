@@ -51,10 +51,10 @@ Or via PackageReference:
 <ItemGroup>
   <PackageReference Include="Vali-Mediator" Version="2.0.0" />
   <PackageReference Include="Vali-Mediator.AspNetCore" Version="2.0.0" />
-  <PackageReference Include="Vali-Mediator.Resilience" Version="2.0.0" />
-  <PackageReference Include="Vali-Mediator.Caching" Version="2.0.0" />
-  <PackageReference Include="Vali-Mediator.Observability" Version="2.0.0" />
-  <PackageReference Include="Vali-Mediator.Idempotency" Version="2.0.0" />
+  <PackageReference Include="Vali-Mediator.Resilience" Version="1.2.2" />
+  <PackageReference Include="Vali-Mediator.Caching" Version="1.1.0" />
+  <PackageReference Include="Vali-Mediator.Observability" Version="1.1.0" />
+  <PackageReference Include="Vali-Mediator.Idempotency" Version="1.1.0" />
 </ItemGroup>
 ```
 

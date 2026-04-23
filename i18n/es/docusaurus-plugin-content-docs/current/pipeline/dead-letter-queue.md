@@ -3,6 +3,9 @@ id: dead-letter-queue
 title: Cola de Mensajes Muertos
 ---
 
+import Drawio from '@theme/Drawio';
+import deadLetterQueue from '@site/static/diagrams/dead-letter-queue.drawio';
+
 # Cola de Mensajes Muertos (Dead Letter Queue)
 
 La Cola de Mensajes Muertos (DLQ) captura fallos de handlers de notificaciones cuando se usa `PublishStrategy.ResilientParallel`, permitiendo inspeccionar, reintentar o alertar sobre fallos sin perderlos.
@@ -18,14 +21,7 @@ builder.Services.AddInMemoryDeadLetterQueue();
 
 Con `ResilientParallel`, todos los handlers se ejecutan independientemente de los fallos individuales. Cualquier handler que lance excepción se captura en la DLQ:
 
-```mermaid
-graph TD
-    Pub["Publish(event, ResilientParallel)"]
-    Pub --> H1["Handler A — éxito"]
-    Pub --> H2["Handler B — lanza excepción!"]
-    Pub --> H3["Handler C — éxito"]
-    H2 --> DLQ["IDeadLetterQueue\n(captura el fallo)"]
-```
+<Drawio content={deadLetterQueue} />
 
 ## Publicar con ResilientParallel
 

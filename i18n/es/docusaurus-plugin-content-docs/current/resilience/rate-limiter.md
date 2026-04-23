@@ -77,3 +77,46 @@ var githubPolicy = ResiliencePolicy.Create()
     })
     .Build();
 ```
+
+---
+
+## Rate Limiting Particionado (por usuario / IP)
+
+Por defecto el rate limiter cuenta todas las llamadas a un tipo de comando en conjunto. Si el Usuario A hace 8 requests y el Usuario B hace 3, la llamada número 11 falla — sin importar quién la generó.
+
+Usá `PartitionKeyResolver` para darle a cada usuario su propio contador independiente:
+
+```csharp
+services.AddResiliencePolicy<LoginCommand>(req =>
+    ResiliencePolicy.Create()
+        .RateLimiter(opts =>
+        {
+            opts.Algorithm = RateLimiterAlgorithm.SlidingWindow;
+            opts.PermitLimit = 5;
+            opts.Window = TimeSpan.FromMinutes(1);
+            // cada email tiene su propio contador
+            opts.PartitionKeyResolver = r => ((LoginCommand)r).Email;
+        })
+        .Build());
+```
+
+Con un resolver configurado:
+- Usuario A alcanza su límite → bloqueado
+- Usuario B no se ve afectado y puede seguir haciendo requests
+
+### Ejemplos de clave de partición
+
+```csharp
+// Por ID de usuario
+opts.PartitionKeyResolver = r => ((MyCommand)r).UserId;
+
+// Por IP (cuando la IP es parte del comando)
+opts.PartitionKeyResolver = r => ((MyCommand)r).ClientIp;
+
+// Por tenant
+opts.PartitionKeyResolver = r => ((MyCommand)r).TenantId;
+```
+
+:::note
+`PartitionKeyResolver` requiere que el request sea despachado a través de `ResilienceBehavior` (integración estándar con Vali-Mediator). Cada clave única crea una instancia independiente de `RateLimiterState` gestionada internamente.
+:::

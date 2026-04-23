@@ -3,131 +3,105 @@ id: handler-integration
 title: Handler Integration
 ---
 
+import Drawio from '@theme/Drawio';
+import handlerResilience from '@site/static/diagrams/handler-resilience.drawio';
+
 # Handler Integration
 
-Instead of creating and managing policies manually, you can declare a resilience policy directly on a handler class using the `IResilient` interface.
+`ResilienceBehavior<TRequest, TResponse>` intercepts every request dispatched through Vali-Mediator and automatically wraps handler execution with the resolved policy — no changes needed in the handler itself.
 
-## IResilient
+## How It Works
 
-```csharp
-public interface IResilient
-{
-    ResiliencePolicy ResiliencePolicy { get; }
-}
-```
-
-## Implementation
-
-```csharp
-public class GetProductHandler
-    : IRequestHandler<GetProductQuery, Result<ProductDto>>,
-      IResilient
-{
-    private static readonly ResiliencePolicy Policy = ResiliencePolicy.Create()
-        .Retry(opts =>
-        {
-            opts.MaxRetries = 3;
-            opts.BackoffType = BackoffType.Exponential;
-            opts.DelayMs = 200;
-        })
-        .CircuitBreaker(opts =>
-        {
-            opts.CircuitKey = "product-db";
-            opts.FailureThreshold = 5;
-            opts.BreakDuration = TimeSpan.FromSeconds(30);
-        })
-        .Timeout(TimeSpan.FromSeconds(5))
-        .Build();
-
-    // IResilient implementation
-    public ResiliencePolicy ResiliencePolicy => Policy;
-
-    private readonly IProductRepository _repository;
-
-    public GetProductHandler(IProductRepository repository)
-    {
-        _repository = repository;
-    }
-
-    public async Task<Result<ProductDto>> Handle(
-        GetProductQuery request,
-        CancellationToken ct)
-    {
-        var product = await _repository.GetByIdAsync(request.ProductId, ct);
-
-        if (product is null)
-            return Result<ProductDto>.Fail("Product not found.", ErrorType.NotFound);
-
-        return Result<ProductDto>.Ok(product.ToDto());
-    }
-}
-```
-
-:::note
-Declare the policy as `static readonly` to avoid recreating it on every handler instantiation. The policy maintains internal state (circuit breaker, rate limiter) that must persist across calls.
-:::
+<Drawio content={handlerResilience} />
 
 ## Registration
-
-Register the `ResilienceBehavior` in your DI setup:
 
 ```csharp
 builder.Services.AddValiMediator(config =>
 {
     config.RegisterServicesFromAssemblyContaining<Program>();
-
-    // Enable resilience behavior — auto-applied to handlers implementing IResilient
     config.AddResilienceBehavior();
 });
 ```
 
-## How It Works
+---
 
-`ResilienceBehavior<TRequest, TResponse>` intercepts every request. If the handler implements `IResilient`, it wraps the handler execution with the policy:
+## Recommended: Policy Providers
 
-```mermaid
-sequenceDiagram
-    participant Mediator
-    participant ResilienceBehavior
-    participant Handler as Handler : IResilient
+The preferred way to attach a policy is via `AddResiliencePolicy<T>` or `IResiliencePolicyProvider<TRequest>`. This keeps the command clean — no infrastructure properties mixed into the domain model.
 
-    Mediator->>ResilienceBehavior: Handle(request)
-    ResilienceBehavior->>ResilienceBehavior: Check if handler implements IResilient
-    ResilienceBehavior->>Handler: policy.ExecuteAsync(() => handler.Handle(request))
-    Handler-->>ResilienceBehavior: Result<T>
-    ResilienceBehavior-->>Mediator: Result<T>
-```
-
-## Per-Handler Policies
-
-Each handler can have its own policy tuned for its specific needs:
+See [Policy Providers](./policy-providers) for the full guide.
 
 ```csharp
-// Fast reads — use hedge for low latency
-public class GetProductHandler : IRequestHandler<GetProductQuery, Result<ProductDto>>, IResilient
+// Command — pure domain data, no policy property
+public class PlaceOrderCommand : IRequest<Result<string>>
 {
-    public ResiliencePolicy ResiliencePolicy { get; } = ResiliencePolicy.Create()
-        .Hedge(TimeSpan.FromMilliseconds(50))
-        .Timeout(TimeSpan.FromSeconds(1))
-        .Build();
+    public string OrderId { get; init; } = string.Empty;
+    public decimal Amount { get; init; }
 }
 
-// Payment — use retry + circuit breaker
-public class ProcessPaymentHandler : IRequestHandler<ProcessPaymentCommand, Result<string>>, IResilient
-{
-    public ResiliencePolicy ResiliencePolicy { get; } = ResiliencePolicy.Create()
-        .Fallback<Result<string>>(opts =>
-        {
-            opts.FallbackValue = Result<string>.Fail("Payment unavailable", ErrorType.Failure);
-        })
-        .Retry(2)
+// Policy registered at startup
+services.AddResiliencePolicy<PlaceOrderCommand>(_ =>
+    ResiliencePolicy.Create("place-order")
+        .Retry(3)
         .CircuitBreaker(opts =>
         {
             opts.CircuitKey = "payment-gateway";
-            opts.FailureThreshold = 3;
-            opts.BreakDuration = TimeSpan.FromMinutes(1);
+            opts.FailureThreshold = 5;
+            opts.BreakDuration = TimeSpan.FromSeconds(30);
         })
-        .Timeout(TimeSpan.FromSeconds(30))
+        .Timeout(TimeSpan.FromSeconds(10))
+        .Build());
+```
+
+---
+
+## Deprecated: IResilient on the Command
+
+:::warning Deprecated in v1.2.0
+`IResilient` is kept for backward compatibility but should not be used in new code.
+Putting a `ResiliencePolicy` property on the command mixes infrastructure with domain data — the policy object gets serialized alongside command fields.
+Use `services.AddResiliencePolicy<T>()` instead.
+:::
+
+```csharp
+// ❌ Old approach — policy lives on the command
+[Obsolete]
+public class CallPaymentGatewayCommand : IRequest<Result<PaymentDto>>, IResilient
+{
+    public string OrderId { get; init; } = string.Empty;
+
+    private static readonly ResiliencePolicy _policy = ResiliencePolicy
+        .Create("payment-gateway")
+        .Retry(3)
+        .Timeout(TimeSpan.FromSeconds(10))
         .Build();
+
+    public ResiliencePolicy Policy => _policy;
 }
 ```
+
+```csharp
+// ✅ New approach — policy separate from the command
+public class CallPaymentGatewayCommand : IRequest<Result<PaymentDto>>
+{
+    public string OrderId { get; init; } = string.Empty;
+}
+
+services.AddResiliencePolicy<CallPaymentGatewayCommand>(_ =>
+    ResiliencePolicy.Create("payment-gateway")
+        .Retry(3)
+        .Timeout(TimeSpan.FromSeconds(10))
+        .Build());
+```
+
+---
+
+## Policy Resolution Order
+
+| Priority | Mechanism |
+|----------|-----------|
+| 1 | `AddResiliencePolicy<T>` / `AddResiliencePolicyProvider<T,P>` |
+| 2 | `IResilient` on the command (deprecated) |
+| 3 | `AddGlobalResiliencePolicy` |
+| — | No policy → request passes through as-is |

@@ -3,6 +3,9 @@ id: overview
 title: Resumen de Caché
 ---
 
+import Drawio from '@theme/Drawio';
+import cachingOverview from '@site/static/diagrams/caching-overview.drawio';
+
 # Caché
 
 `Vali-Mediator.Caching` agrega caché declarativa en el pipeline a cualquier `IRequest<T>` sin modificar el código del handler.
@@ -27,15 +30,7 @@ builder.Services.AddInMemoryCacheStore();
 
 ## Cómo Funciona
 
-```mermaid
-flowchart TD
-    Request["Solicitud (ICacheable)"] --> CB["CachingBehavior"]
-    CB --> CacheCheck{"¿Caché Hit?"}
-    CacheCheck -->|"Sí"| Return["Retornar valor cacheado"]
-    CacheCheck -->|"No"| Handler["Ejecutar Handler"]
-    Handler --> Store["Almacenar en caché"]
-    Store --> Return2["Retornar valor fresco"]
-```
+<Drawio content={cachingOverview} />
 
 ## Ejemplo Rápido
 

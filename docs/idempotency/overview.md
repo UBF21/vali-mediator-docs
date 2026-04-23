@@ -3,6 +3,9 @@ id: overview
 title: Idempotency Overview
 ---
 
+import Drawio from '@theme/Drawio';
+import idempotencyFlow from '@site/static/diagrams/idempotency-flow.drawio';
+
 # Idempotency
 
 `Vali-Mediator.Idempotency` prevents duplicate processing of requests by storing results and returning cached outcomes for repeated requests with the same idempotency key.
@@ -27,15 +30,7 @@ builder.Services.AddInMemoryIdempotencyStore();
 
 ## How It Works
 
-```mermaid
-flowchart TD
-    Request["Request (IIdempotent)"] --> IB["IdempotencyBehavior"]
-    IB --> Check{"Key exists\nin store?"}
-    Check -->|"Yes (duplicate)"| Cached["Return stored result"]
-    Check -->|"No (first time)"| Handler["Execute Handler"]
-    Handler --> Store["Store result with key + expiration"]
-    Store --> Return["Return fresh result"]
-```
+<Drawio content={idempotencyFlow} />
 
 ## Marking a Request as Idempotent
 

@@ -3,19 +3,16 @@ id: notifications
 title: Notifications & Events
 ---
 
+import Drawio from '@theme/Drawio';
+import fanOut from '@site/static/diagrams/fan-out.drawio';
+
 # Notifications & Events
 
 Notifications implement the **fan-out** pattern — one notification published to **N handlers**. They are ideal for domain events and decoupled side effects.
 
 ## Fan-Out Flow
 
-```mermaid
-graph LR
-    Publisher["Publisher"] --> Mediator["IValiMediator\n.Publish()"]
-    Mediator --> H1["EmailHandler\nPriority: 10"]
-    Mediator --> H2["AuditHandler\nPriority: 5"]
-    Mediator --> H3["AnalyticsHandler\nPriority: 0"]
-```
+<Drawio content={fanOut} />
 
 ## Defining Notifications
 

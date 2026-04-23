@@ -3,23 +3,16 @@ id: behaviors
 title: Pipeline Behaviors
 ---
 
+import Drawio from '@theme/Drawio';
+import pipelineBehaviors from '@site/static/diagrams/pipeline-behaviors.drawio';
+
 # Pipeline Behaviors
 
 Pipeline behaviors wrap handler execution, enabling cross-cutting concerns like logging, validation, caching, and resilience — without touching handler code.
 
 ## The Onion Model
 
-```mermaid
-graph TD
-    Client --> B1["Behavior 1 (outermost)\ne.g. Logging"]
-    B1 --> B2["Behavior 2\ne.g. Validation"]
-    B2 --> B3["Behavior 3 (innermost)\ne.g. Caching"]
-    B3 --> Handler["Handler"]
-    Handler --> B3
-    B3 --> B2
-    B2 --> B1
-    B1 --> Client
-```
+<Drawio content={pipelineBehaviors} />
 
 **First registered = outermost** (executes first before the handler, last after).
 

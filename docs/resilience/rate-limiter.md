@@ -110,20 +110,45 @@ var githubPolicy = ResiliencePolicy.Create()
     .Build();
 ```
 
-### Per-User Request Throttling
+---
 
-Create one policy instance per user/tenant:
+## Partitioned Rate Limiting (per user / IP)
+
+By default the rate limiter counts all calls to a command type together. If User A makes 8 requests and User B makes 3, the 11th call fails — regardless of who triggered it.
+
+Use `PartitionKeyResolver` to give each user their own independent counter:
 
 ```csharp
-var userPolicies = new ConcurrentDictionary<string, ResiliencePolicy>();
-
-ResiliencePolicy GetUserPolicy(string userId) =>
-    userPolicies.GetOrAdd(userId, _ => ResiliencePolicy.Create()
+services.AddResiliencePolicy<LoginCommand>(req =>
+    ResiliencePolicy.Create()
         .RateLimiter(opts =>
         {
             opts.Algorithm = RateLimiterAlgorithm.SlidingWindow;
-            opts.PermitLimit = 10;
-            opts.Window = TimeSpan.FromSeconds(1);
+            opts.PermitLimit = 5;
+            opts.Window = TimeSpan.FromMinutes(1);
+            // each email gets its own counter
+            opts.PartitionKeyResolver = r => ((LoginCommand)r).Email;
         })
         .Build());
 ```
+
+With a resolver set:
+- User A reaches their limit → blocked
+- User B is unaffected and can still make requests
+
+### Partition key examples
+
+```csharp
+// By user ID
+opts.PartitionKeyResolver = r => ((MyCommand)r).UserId;
+
+// By IP (when IP is part of the command)
+opts.PartitionKeyResolver = r => ((MyCommand)r).ClientIp;
+
+// By tenant
+opts.PartitionKeyResolver = r => ((MyCommand)r).TenantId;
+```
+
+:::note
+`PartitionKeyResolver` requires the request to be dispatched through `ResilienceBehavior` (standard Vali-Mediator integration). Each unique key creates an independent `RateLimiterState` instance managed internally.
+:::

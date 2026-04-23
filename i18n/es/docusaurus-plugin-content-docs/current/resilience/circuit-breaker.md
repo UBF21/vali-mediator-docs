@@ -3,20 +3,16 @@ id: circuit-breaker
 title: Cortocircuito (Circuit Breaker)
 ---
 
+import Drawio from '@theme/Drawio';
+import circuitBreaker from '@site/static/diagrams/circuit-breaker.drawio';
+
 # Cortocircuito (Circuit Breaker)
 
 El circuit breaker previene llamar repetidamente a un servicio que está fallando. Después de un umbral de fallos, "abre" el circuito y falla rápido las solicitudes hasta que el servicio tenga tiempo de recuperarse.
 
 ## Diagrama de Estados
 
-```mermaid
-stateDiagram-v2
-    [*] --> Cerrado
-    Cerrado --> Abierto: Umbral de fallos excedido
-    Abierto --> MedioAbierto: Duración de pausa expiró
-    MedioAbierto --> Cerrado: Solicitud de prueba exitosa
-    MedioAbierto --> Abierto: Solicitud de prueba falla
-```
+<Drawio content={circuitBreaker} />
 
 ## Uso Básico
 

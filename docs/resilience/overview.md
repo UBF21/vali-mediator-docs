@@ -3,6 +3,9 @@ id: overview
 title: Resilience Overview
 ---
 
+import Drawio from '@theme/Drawio';
+import resilienceOverview from '@site/static/diagrams/resilience-overview.drawio';
+
 # Resilience
 
 `Vali-Mediator.Resilience` provides a fluent, composable resilience pipeline with zero external dependencies.
@@ -17,18 +20,7 @@ dotnet add package Vali-Mediator.Resilience
 
 When multiple policies are combined, they execute in this fixed order (outermost → innermost):
 
-```mermaid
-graph LR
-    Call["Your Call"] --> Fallback
-    Fallback --> Chaos
-    Chaos --> RateLimit["Rate Limiter"]
-    RateLimit --> Timeout
-    Timeout --> CB["Circuit Breaker"]
-    CB --> Bulkhead
-    Bulkhead --> Retry
-    Retry --> Hedge
-    Hedge --> Handler["Your Handler"]
-```
+<Drawio content={resilienceOverview} />
 
 **Fallback** is always the outermost — it catches failures from all inner policies.
 **Hedge** is innermost — it runs the actual operation (potentially in parallel).

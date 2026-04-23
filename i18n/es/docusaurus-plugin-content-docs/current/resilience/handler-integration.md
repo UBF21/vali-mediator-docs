@@ -3,69 +3,16 @@ id: handler-integration
 title: Integración en Handlers
 ---
 
+import Drawio from '@theme/Drawio';
+import handlerResilience from '@site/static/diagrams/handler-resilience.drawio';
+
 # Integración en Handlers
 
-En lugar de crear y gestionar políticas manualmente, puedes declarar una política de resiliencia directamente en una clase handler usando la interfaz `IResilient`.
+`ResilienceBehavior<TRequest, TResponse>` intercepta cada request despachado por Vali-Mediator y envuelve automáticamente la ejecución del handler con la política resuelta — sin cambios en el handler.
 
-## IResilient
+## Cómo Funciona
 
-```csharp
-public interface IResilient
-{
-    ResiliencePolicy ResiliencePolicy { get; }
-}
-```
-
-## Implementación
-
-```csharp
-public class GetProductHandler
-    : IRequestHandler<GetProductQuery, Result<ProductDto>>,
-      IResilient
-{
-    private static readonly ResiliencePolicy Policy = ResiliencePolicy.Create()
-        .Retry(opts =>
-        {
-            opts.MaxRetries = 3;
-            opts.BackoffType = BackoffType.Exponential;
-            opts.DelayMs = 200;
-        })
-        .CircuitBreaker(opts =>
-        {
-            opts.CircuitKey = "product-db";
-            opts.FailureThreshold = 5;
-            opts.BreakDuration = TimeSpan.FromSeconds(30);
-        })
-        .Timeout(TimeSpan.FromSeconds(5))
-        .Build();
-
-    // Implementación de IResilient
-    public ResiliencePolicy ResiliencePolicy => Policy;
-
-    private readonly IProductRepository _repository;
-
-    public GetProductHandler(IProductRepository repository)
-    {
-        _repository = repository;
-    }
-
-    public async Task<Result<ProductDto>> Handle(
-        GetProductQuery request,
-        CancellationToken ct)
-    {
-        var product = await _repository.GetByIdAsync(request.ProductId, ct);
-
-        if (product is null)
-            return Result<ProductDto>.Fail("Producto no encontrado.", ErrorType.NotFound);
-
-        return Result<ProductDto>.Ok(product.ToDto());
-    }
-}
-```
-
-:::note
-Declara la política como `static readonly` para evitar recrearla en cada instanciación del handler. La política mantiene estado interno (circuit breaker, rate limiter) que debe persistir entre llamadas.
-:::
+<Drawio content={handlerResilience} />
 
 ## Registro
 
@@ -73,40 +20,88 @@ Declara la política como `static readonly` para evitar recrearla en cada instan
 builder.Services.AddValiMediator(config =>
 {
     config.RegisterServicesFromAssemblyContaining<Program>();
-
-    // Habilita ResilienceBehavior — se aplica automáticamente a handlers que implementan IResilient
     config.AddResilienceBehavior();
 });
 ```
 
-## Políticas por Handler
+---
+
+## Recomendado: Policy Providers
+
+La forma preferida de asociar una política es mediante `AddResiliencePolicy<T>` o `IResiliencePolicyProvider<TRequest>`. Esto mantiene el comando limpio — sin propiedades de infraestructura mezcladas en el modelo de dominio.
+
+Ver [Policy Providers](./policy-providers) para la guía completa.
 
 ```csharp
-// Lecturas rápidas — usa hedge para baja latencia
-public class GetProductHandler : IRequestHandler<GetProductQuery, Result<ProductDto>>, IResilient
+// Comando — datos de dominio puros, sin propiedad Policy
+public class PlaceOrderCommand : IRequest<Result<string>>
 {
-    public ResiliencePolicy ResiliencePolicy { get; } = ResiliencePolicy.Create()
-        .Hedge(TimeSpan.FromMilliseconds(50))
-        .Timeout(TimeSpan.FromSeconds(1))
-        .Build();
+    public string OrderId { get; init; } = string.Empty;
+    public decimal Amount { get; init; }
 }
 
-// Pagos — usa retry + circuit breaker
-public class ProcessPaymentHandler : IRequestHandler<ProcessPaymentCommand, Result<string>>, IResilient
-{
-    public ResiliencePolicy ResiliencePolicy { get; } = ResiliencePolicy.Create()
-        .Fallback<Result<string>>(opts =>
-        {
-            opts.FallbackValue = Result<string>.Fail("Pago no disponible", ErrorType.Failure);
-        })
-        .Retry(2)
+// Política registrada en startup
+services.AddResiliencePolicy<PlaceOrderCommand>(_ =>
+    ResiliencePolicy.Create("place-order")
+        .Retry(3)
         .CircuitBreaker(opts =>
         {
             opts.CircuitKey = "payment-gateway";
-            opts.FailureThreshold = 3;
-            opts.BreakDuration = TimeSpan.FromMinutes(1);
+            opts.FailureThreshold = 5;
+            opts.BreakDuration = TimeSpan.FromSeconds(30);
         })
-        .Timeout(TimeSpan.FromSeconds(30))
+        .Timeout(TimeSpan.FromSeconds(10))
+        .Build());
+```
+
+---
+
+## Deprecado: IResilient en el Comando
+
+:::warning Deprecado en v1.2.0
+`IResilient` se mantiene por compatibilidad pero no debe usarse en código nuevo.
+Poner una propiedad `ResiliencePolicy` en el comando mezcla infraestructura con datos de dominio — el objeto policy se serializa junto con los campos del comando.
+Usá `services.AddResiliencePolicy<T>()` en su lugar.
+:::
+
+```csharp
+// ❌ Enfoque antiguo — política en el comando
+[Obsolete]
+public class CallPaymentGatewayCommand : IRequest<Result<PaymentDto>>, IResilient
+{
+    public string OrderId { get; init; } = string.Empty;
+
+    private static readonly ResiliencePolicy _policy = ResiliencePolicy
+        .Create("payment-gateway")
+        .Retry(3)
+        .Timeout(TimeSpan.FromSeconds(10))
         .Build();
+
+    public ResiliencePolicy Policy => _policy;
 }
 ```
+
+```csharp
+// ✅ Enfoque nuevo — política separada del comando
+public class CallPaymentGatewayCommand : IRequest<Result<PaymentDto>>
+{
+    public string OrderId { get; init; } = string.Empty;
+}
+
+services.AddResiliencePolicy<CallPaymentGatewayCommand>(_ =>
+    ResiliencePolicy.Create("payment-gateway")
+        .Retry(3)
+        .Timeout(TimeSpan.FromSeconds(10))
+        .Build());
+```
+
+---
+
+## Orden de Resolución
+
+| Prioridad | Mecanismo |
+|-----------|-----------|
+| 1 | `AddResiliencePolicy<T>` / `AddResiliencePolicyProvider<T,P>` |
+| 2 | `IResilient` en el comando (deprecado) |
+| 3 | `AddGlobalResiliencePolicy` |
+| — | Sin política → el request pasa sin modificaciones |

@@ -3,6 +3,9 @@ id: hedge
 title: Hedge Policy
 ---
 
+import Drawio from '@theme/Drawio';
+import hedgePolicy from '@site/static/diagrams/hedge-policy.drawio';
+
 # Hedge Policy
 
 The hedge policy starts a **parallel speculative request** if the original doesn't complete within a delay. Whichever completes first wins; the others are cancelled.
@@ -37,19 +40,7 @@ var policy = ResiliencePolicy.Create()
 
 ## How It Works
 
-```mermaid
-sequenceDiagram
-    participant Policy
-    participant Original as Original Request
-    participant Hedge as Hedge Request
-
-    Policy->>Original: Start
-    Note over Policy: Wait HedgeDelay (100ms)
-    Policy->>Hedge: Start (original still running)
-    Hedge-->>Policy: Complete (faster!)
-    Policy->>Original: Cancel
-    Policy-->>Caller: Return hedge result
-```
+<Drawio content={hedgePolicy} />
 
 ## Hedge on Result Predicate
 

@@ -63,6 +63,7 @@ const sidebars: SidebarsConfig = {
         'resilience/chaos',
         'resilience/fallback',
         'resilience/combining',
+        'resilience/policy-providers',
         'resilience/handler-integration',
       ],
     },
@@ -110,6 +111,11 @@ const sidebars: SidebarsConfig = {
       type: 'doc',
       id: 'migration',
       label: 'Migration Guide',
+    },
+    {
+      type: 'doc',
+      id: 'changelog',
+      label: 'Changelog',
     },
   ],
 };

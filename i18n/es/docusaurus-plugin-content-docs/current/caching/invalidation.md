@@ -3,6 +3,9 @@ id: invalidation
 title: Invalidación de Caché
 ---
 
+import Drawio from '@theme/Drawio';
+import cacheInvalidation from '@site/static/diagrams/cache-invalidation.drawio';
+
 # Invalidación de Caché
 
 Usa `IInvalidatesCache` en cualquier solicitud para invalidar automáticamente entradas de caché cuando la solicitud se procesa.
@@ -55,13 +58,7 @@ public record DeleteProductCommand(Guid Id)
 
 La invalidación de caché se ejecuta **después** de que el handler ejecute exitosamente. Si el handler falla, la caché NO se invalida.
 
-```mermaid
-flowchart TD
-    Cmd["Comando (IInvalidatesCache)"] --> Handler
-    Handler --> Success{¿Éxito?}
-    Success -->|Sí| Invalidate["Invalida entradas de caché"]
-    Success -->|No| Skip["Caché sin cambios"]
-```
+<Drawio content={cacheInvalidation} />
 
 ## Patrón Write-Through Completo
 

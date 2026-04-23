@@ -3,26 +3,16 @@ id: requests
 title: Requests & Commands
 ---
 
+import Drawio from '@theme/Drawio';
+import requestFlow from '@site/static/diagrams/request-flow.drawio';
+
 # Requests & Commands
 
 Requests are the primary dispatch mechanism in Vali-Mediator. Each request has **exactly one handler**.
 
 ## Request Flow
 
-```mermaid
-sequenceDiagram
-    participant Client
-    participant Mediator as IValiMediator
-    participant Pipeline as Pipeline Behaviors
-    participant Handler as IRequestHandler
-
-    Client->>Mediator: Send(request)
-    Mediator->>Pipeline: Execute behaviors
-    Pipeline->>Handler: Handle(request, ct)
-    Handler-->>Pipeline: TResponse
-    Pipeline-->>Mediator: TResponse
-    Mediator-->>Client: TResponse
-```
+<Drawio content={requestFlow} />
 
 ## Defining Requests
 

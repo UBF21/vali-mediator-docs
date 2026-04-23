@@ -3,6 +3,9 @@ id: overview
 title: Caching Overview
 ---
 
+import Drawio from '@theme/Drawio';
+import cachingOverview from '@site/static/diagrams/caching-overview.drawio';
+
 # Caching
 
 `Vali-Mediator.Caching` adds declarative pipeline caching to any `IRequest<T>` without modifying handler code.
@@ -28,17 +31,7 @@ builder.Services.AddInMemoryCacheStore();
 
 ## How It Works
 
-```mermaid
-flowchart TD
-    Request["Request (ICacheable)"] --> CB["CachingBehavior"]
-    CB --> CacheCheck{"Cache Hit?"}
-    CacheCheck -->|"Yes"| Return["Return cached value"]
-    CacheCheck -->|"No"| Handler["Execute Handler"]
-    Handler --> Store["Store in cache"]
-    Store --> Return2["Return fresh value"]
-
-    BypassCache["BypassCache = true"] --> Handler
-```
+<Drawio content={cachingOverview} />
 
 ## Quick Example
 

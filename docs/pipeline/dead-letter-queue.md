@@ -3,6 +3,9 @@ id: dead-letter-queue
 title: Dead Letter Queue
 ---
 
+import Drawio from '@theme/Drawio';
+import deadLetterQueue from '@site/static/diagrams/dead-letter-queue.drawio';
+
 # Dead Letter Queue
 
 The Dead Letter Queue (DLQ) captures notification handler failures when using `PublishStrategy.ResilientParallel`, allowing you to inspect, retry, or alert on failures without losing them.
@@ -18,14 +21,7 @@ builder.Services.AddInMemoryDeadLetterQueue();
 
 When using `ResilientParallel`, all handlers run regardless of individual failures. Any handler that throws is captured in the DLQ instead of propagating the exception:
 
-```mermaid
-graph TD
-    Pub["Publish(event, ResilientParallel)"]
-    Pub --> H1["Handler A — succeeds"]
-    Pub --> H2["Handler B — throws!"]
-    Pub --> H3["Handler C — succeeds"]
-    H2 --> DLQ["IDeadLetterQueue\n(captures failure)"]
-```
+<Drawio content={deadLetterQueue} />
 
 ## Publishing with ResilientParallel
 
