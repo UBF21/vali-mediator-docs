@@ -128,6 +128,19 @@ builder.Services.RegisterResiliencePoliciesFromAssemblyContaining<Program>(
 `GetPolicy()` is called **once** per request type and the result is cached for the lifetime of the application. The provider lifetime only affects how the provider itself is resolved for that first call — subsequent requests use the cached policy directly.
 :::
 
+:::tip Testing auto-discovery (v1.2.4+)
+`RegisterResiliencePoliciesFromAssembly` and `RegisterResiliencePoliciesFromAssemblyContaining<T>` are fully covered by unit tests. You can verify discovery in your own tests by calling these methods with `typeof(YourMarker).Assembly` and resolving `IResiliencePolicyProvider<T>` from the built `ServiceProvider`.
+
+```csharp
+var services = new ServiceCollection();
+services.RegisterResiliencePoliciesFromAssembly(typeof(MyMarker).Assembly);
+var provider = services.BuildServiceProvider();
+
+var policyProvider = provider.GetService<IResiliencePolicyProvider<MyRequest>>();
+Assert.NotNull(policyProvider);
+```
+:::
+
 ---
 
 ## Global Policy
