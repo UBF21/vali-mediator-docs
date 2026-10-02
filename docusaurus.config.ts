@@ -15,8 +15,8 @@ const config: Config = {
   organizationName: 'UBF21',
   projectName: 'Vali-Mediator',
 
-  onBrokenLinks: 'warn',
-  onBrokenMarkdownLinks: 'warn',
+  onBrokenLinks: 'throw',
+  onBrokenMarkdownLinks: 'throw',
 
   stylesheets: [
     {

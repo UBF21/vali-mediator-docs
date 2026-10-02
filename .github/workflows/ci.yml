@@ -1,0 +1,39 @@
+name: CI
+
+# Netlify ya está conectado por repo y deploya solo en push a main — este workflow NO despliega nada,
+# es el gate de validación antes de mergear. onBrokenLinks/onBrokenMarkdownLinks están en 'throw' en
+# docusaurus.config.ts, así que un link roto o un id de sidebar inválido rompe este build.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: Build site (EN + ES)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Build (EN + ES, broken links fail the build)
+        run: bun run build
+
+      - name: Upload build output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-build
+          path: build/
+          if-no-files-found: error
+          retention-days: 7
