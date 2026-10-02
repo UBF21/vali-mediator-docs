@@ -11,6 +11,97 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and 
 
 ---
 
+## Vali-Mediator 3.0.0 · Extension Packages 2.0.0
+
+Released on 2026-10-01
+
+Core `Vali-Mediator` **3.0.0**; `AspNetCore`, `Caching`, `Idempotency`, `Observability` and `Resilience` **2.0.0**. The extensions call the new `IPipelineBehavior.Handle(..., Func<CancellationToken, Task<T>> next)` signature, so they only work with core 3.x — upgrade the core and **all** extensions together, use `[3.0.0, 4.0.0)` as the recommended dependency range. See the [Migration Guide](./migration.md) for the full upgrade checklist.
+
+Also added the `net10.0` target framework across every package (now `net7.0;net8.0;net9.0;net10.0`).
+
+### Breaking (core)
+
+- **`next` in pipeline behaviors now takes a `CancellationToken`.** `IPipelineBehavior<TRequest,TResponse>.Handle` takes `Func<CancellationToken, Task<TResponse>> next`; `IPipelineBehavior<TRequest>.Handle` takes `Func<CancellationToken, Task> next`. The mediator chains the effective token down to the handler, so a behavior that cancels on its own (a timeout, for example) now really cancels the handler.
+- `Publish<T>` now runs handlers registered for the runtime type **and** the static type (deduplicated).
+- Scanning the same assembly twice keeps a single registration; the **last** lifetime wins.
+- `default(Result)` / `default(Result<T>)` report an explicit "not initialized" failure (`ErrorType.Failure`); `Result.Fail("x", ErrorType.None)` keeps `ErrorType.None`.
+- `TimeoutBehavior` throws `TimeoutException` (handler exception as `InnerException`) whenever the timeout expired and the handler failed, not only on `OperationCanceledException` — and it now actually cancels the handler instead of letting it keep running.
+
+### Added (core)
+
+- `IValiMediator.SendAll(requests, maxDegreeOfParallelism, cancellationToken)` — bounded-concurrency fan-out, results keep request order.
+
+### Changed (core)
+
+- `Send`, `SendOrDefault`, fire-and-forget, streams and `Publish` use typed dispatchers cached per message type — no `MakeGenericType`, `MethodInfo.Invoke` or `object[]` per call. `Send` is roughly 5× faster and allocates 60% less than 2.0.1 (net9.0, BenchmarkDotNet).
+
+### Fixed (core)
+
+- A handler exception thrown synchronously now reaches the caller with its original type and stack, no `TargetInvocationException` wrapper.
+- `AddRequestBehavior<T>()` / `AddDispatchBehavior<T>()` with a closed behavior type no longer crashes DI registration.
+- A pre/post processor registered explicitly **and** found by the assembly scan no longer runs twice.
+
+### Breaking (Vali-Mediator.Resilience)
+
+- **New policy execution order:** `Fallback → Chaos → Rate Limiter → Retry → Timeout → Circuit Breaker → Bulkhead → Hedge → your delegate`. Previously Chaos and the Rate Limiter ran *inside* Retry and the Circuit Breaker, so a rate-limit rejection was retried, consumed one permit per attempt, and counted as a circuit-breaker failure — they're now evaluated once per logical call.
+- `ResilienceBehavior` resolves the policy **per request** instead of caching it per `<TRequest,TResponse>` type on the first call. Providers/factories that build a new `ResiliencePolicy` per call now lose Circuit Breaker/Bulkhead/Rate Limiter state between calls — build the policy once, or use `.WithSharedState(key)`.
+- Options outside their valid range throw at `.Build()` instead of misbehaving at run time.
+- Hedge returns the last exception when every attempt fails (previously returned `default(T)` silently); abandoned attempts keep running if the operation ignores its cancellation token.
+
+### Added (Vali-Mediator.Resilience)
+
+- `ResiliencePolicyBuilder.WithSharedState(key)` — shares Bulkhead/Rate Limiter/Circuit Breaker state by name between separately built policies.
+- `RateLimiterOptions.MaxPartitions` (default 10,000), `PartitionIdleTimeout` (default 5 min) — bounds memory when the partition key comes from client input.
+- `ChaosOptions.InjectPerAttempt` — inject faults inside Retry/Timeout/Circuit Breaker instead of only at the outermost layer.
+- `FallbackOptions.FallbackOnResultPredicate` now actually works (it was documented but ignored before).
+
+### Fixed (Vali-Mediator.Resilience)
+
+- Circuit Breaker: exact `HalfOpenMaxAttempts`, atomic state transitions under a single lock, caller cancellation and bulkhead rejections no longer count as failures.
+- Retry: exponential/linear/jitter backoff no longer throws `OverflowException` with many retries.
+- Fallback no longer swallows the caller's `OperationCanceledException`.
+- Bulkhead honors `MaxQueuedCalls` correctly (including `0` and infinite queue timeout).
+
+### Added (Vali-Mediator.Idempotency)
+
+- **`IIdempotent.IdempotencyScope`** — isolates keys per user/tenant; the same `IdempotencyKey` under a different scope never shares a response.
+- **Request payload fingerprint (SHA-256).** Reusing a key with a different payload returns `Conflict` for `IResult` responses, or throws `IdempotencyConflictException` otherwise. Disable with `IdempotencyOptions.VerifyRequestFingerprint = false`.
+- **Atomic cross-process reservation.** `IIdempotencyStore` gains `SupportsReservation`, `TryReserveAsync`, `ReleaseReservationAsync` — a store that opts in makes two instances receiving the same key at the same time run it only once (verified with two real processes sharing Redis). `InMemoryIdempotencyStore` implements it; `IdempotencyOptions.ReservationLease` / `ReservationWaitTimeout` / `ReservationPollInterval` configure it, and `IdempotencyInProgressException` is thrown when the wait times out.
+- `IdempotencyOptions.MaxKeyLength` (default 256) and `InMemoryIdempotencyStoreOptions` (`MaxEntries` 10,000, `DefaultExpiration` 24h).
+
+### Breaking (Vali-Mediator.Idempotency)
+
+- The store key now includes the scope (`Type#len:scope#key`) — entries written by 2.x-era builds are treated as a miss (the handler runs once more after upgrading).
+
+### Added (Vali-Mediator.Caching)
+
+- **Coalescing of concurrent misses** on the same key: the first caller runs the handler, the rest await its result instead of each hitting the backing store. `CachingOptions.CoalescingWaitTimeout` (default 30s) bounds how long a follower waits before running the handler itself.
+- `InMemoryCacheOptions.MaxKeyLength` (512), `MaxGroups` (10,000), `MaxKeysPerGroup` (10,000) — every limit is validated, and client-controlled keys/groups past the limit are dropped instead of accepted.
+
+### Changed (Vali-Mediator.Caching)
+
+- `InMemoryCacheOptions.MaxEntries` default raised from 1,000 to 10,000; `InMemoryCacheStore` rewritten around a single lock + LRU linked list, eviction is now O(1).
+- A key belongs to at most one group — registering it under another group moves it.
+
+### Added (Vali-Mediator.Observability)
+
+- `ObservabilityOptions.IncludeExceptionMessage` (default `false`) — exception messages are redacted to just the type name on traces/logs/metrics unless explicitly opted in.
+- `IMetricsCollector.RecordObserverError(...)` — invoked whenever an observer throws.
+
+### Changed (Vali-Mediator.Observability)
+
+- A throwing observer never breaks the others or the request: every observer always runs, and their exceptions are collected instead of propagated.
+
+### Breaking (Vali-Mediator.AspNetCore)
+
+- `Failure` (HTTP 500) responses no longer include `Result.Error` in `ProblemDetails.Detail` by default — they return a generic message. Set `ResultHttpOptions.ExposeErrorDetails = true` to restore the previous behavior (development only).
+
+### Packaging
+
+- Stopped producing `.snupkg` symbol packages — `DebugType` is already `embedded` (the PDB ships inside each DLL), so the separate symbol package added nothing and only risked failing the publish on NuGet.org's symbol-server hiccups.
+
+---
+
 ## Vali-Mediator.Resilience v1.2.2
 
 Released on 2026-04-20

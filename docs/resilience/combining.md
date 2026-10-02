@@ -12,14 +12,16 @@ Policies compose naturally in the resilience pipeline. Understanding the executi
 Regardless of the order you add them with the builder, policies always execute in this order:
 
 ```
-Fallback → Chaos → RateLimiter → Timeout → CircuitBreaker → Bulkhead → Retry → Hedge → Handler
+Fallback → Chaos → RateLimiter → Retry → Timeout → CircuitBreaker → Bulkhead → Hedge → Handler
 ```
 
 This means:
 - **Fallback** sees all failures from all other policies
-- **Retry** fires after CircuitBreaker passes the call through (open circuit = no retry)
+- **Chaos** and **RateLimiter** are evaluated once per logical call, not retried — a rate-limit rejection no longer gets retried or counted against the circuit breaker
+- **Retry** fires after RateLimiter lets the call through, and wraps everything inside it (CircuitBreaker, Bulkhead, Hedge)
 - **Timeout** applies per attempt (inside Retry)
-- **Hedge** runs the actual operation, potentially in parallel
+- **CircuitBreaker** sits between Timeout and Bulkhead — an open circuit short-circuits before a bulkhead slot is taken
+- **Hedge** runs the actual operation, potentially in parallel, as the innermost policy
 
 ## Common Combinations
 
@@ -127,7 +129,7 @@ var policy = ResiliencePresets.ForCritical(fallbackValue: Result<string>.Fail("U
 
 :::tip Design Principles
 1. **Always add Fallback** when the caller cannot handle exceptions
-2. **Put CircuitBreaker before Retry** (already enforced by execution order) — the CB prevents retries against an open circuit
+2. **Retry wraps CircuitBreaker** (enforced by execution order) — each retry attempt passes through the circuit breaker, so an open circuit still short-circuits individual attempts instead of letting them all fail slowly
 3. **Timeout applies per retry attempt** — a 5s timeout with 3 retries = up to 15s total + backoff
 4. **Hedge reduces P99 latency** — not error recovery. Use Retry for errors, Hedge for latency.
 5. **Use CircuitKey** to share circuit state across multiple operations targeting the same service

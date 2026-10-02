@@ -7,7 +7,7 @@ title: Instalación
 
 ## Prerrequisitos
 
-- .NET 7.0, 8.0 o 9.0
+- .NET 7.0, 8.0, 9.0 o 10.0
 - `Microsoft.Extensions.DependencyInjection` (incluido transitivamente)
 
 ## Paquete Core
@@ -19,7 +19,7 @@ dotnet add package Vali-Mediator
 O mediante `PackageReference`:
 
 ```xml
-<PackageReference Include="Vali-Mediator" Version="2.0.0" />
+<PackageReference Include="Vali-Mediator" Version="3.0.0" />
 ```
 
 ## Paquetes de Extensión

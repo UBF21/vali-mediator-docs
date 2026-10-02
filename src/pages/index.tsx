@@ -340,7 +340,7 @@ function HeroSection() {
       <div className={styles.heroInner}>
         <div className={styles.heroBadge}>
           <span className={styles.heroBadgePulse} />
-          .NET 7 · .NET 8 · .NET 9
+          .NET 7 · .NET 8 · .NET 9 · .NET 10
         </div>
         <h1 className={styles.heroTitle}>Vali-Mediator</h1>
         <p className={styles.heroTagline}>

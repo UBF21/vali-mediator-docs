@@ -14,7 +14,7 @@ import dispatchFlow from '@site/static/diagrams/dispatch-flow.drawio';
 ## ¿Por qué Vali-Mediator?
 
 - **Sin dependencias externas** en el paquete core (solo `Microsoft.Extensions.DependencyInjection.Abstractions`)
-- **Soporta .NET 7, 8 y 9** — multi-target desde un solo paquete
+- **Soporta .NET 7, 8, 9 y 10** — multi-target desde un solo paquete
 - **Patrón Result integrado** — sin excepciones para fallos de lógica de negocio
 - **Pipeline extensible** — agrega behaviors y pre/post procesadores sin tocar el código de negocio
 - **Ecosistema completo** — resiliencia, caché, observabilidad e idempotencia como paquetes opcionales
@@ -65,4 +65,4 @@ import dispatchFlow from '@site/static/diagrams/dispatch-flow.drawio';
 
 ## Versión
 
-Versión estable actual: **2.0.0**
+Versión estable actual: **3.0.0** (core) · **2.0.0** (paquetes de extensión)

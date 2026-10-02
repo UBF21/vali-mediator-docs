@@ -7,7 +7,7 @@ title: Installation
 
 ## Prerequisites
 
-- .NET 7.0, 8.0, or 9.0
+- .NET 7.0, 8.0, 9.0, or 10.0
 - `Microsoft.Extensions.DependencyInjection` (already included transitively)
 
 ## Core Package
@@ -21,7 +21,7 @@ dotnet add package Vali-Mediator
 Or via `PackageReference` in your `.csproj`:
 
 ```xml
-<PackageReference Include="Vali-Mediator" Version="2.0.0" />
+<PackageReference Include="Vali-Mediator" Version="3.0.0" />
 ```
 
 ## Extension Packages
@@ -49,12 +49,12 @@ Or via PackageReference:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="Vali-Mediator" Version="2.0.0" />
+  <PackageReference Include="Vali-Mediator" Version="3.0.0" />
   <PackageReference Include="Vali-Mediator.AspNetCore" Version="2.0.0" />
-  <PackageReference Include="Vali-Mediator.Resilience" Version="1.2.2" />
-  <PackageReference Include="Vali-Mediator.Caching" Version="1.1.0" />
-  <PackageReference Include="Vali-Mediator.Observability" Version="1.1.0" />
-  <PackageReference Include="Vali-Mediator.Idempotency" Version="1.1.0" />
+  <PackageReference Include="Vali-Mediator.Resilience" Version="2.0.0" />
+  <PackageReference Include="Vali-Mediator.Caching" Version="2.0.0" />
+  <PackageReference Include="Vali-Mediator.Observability" Version="2.0.0" />
+  <PackageReference Include="Vali-Mediator.Idempotency" Version="2.0.0" />
 </ItemGroup>
 ```
 
