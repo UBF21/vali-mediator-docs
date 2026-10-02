@@ -12,8 +12,16 @@ Las políticas se componen naturalmente en el pipeline de resiliencia. Entender 
 Independientemente del orden en que las agregues con el builder, las políticas siempre se ejecutan en este orden:
 
 ```
-Fallback → Chaos → RateLimiter → Timeout → CircuitBreaker → Bulkhead → Retry → Hedge → Handler
+Fallback → Chaos → RateLimiter → Retry → Timeout → CircuitBreaker → Bulkhead → Hedge → Handler
 ```
+
+Esto significa:
+- **Fallback** ve todos los fallos de todas las demás políticas
+- **Chaos** y **RateLimiter** se evalúan una sola vez por llamada lógica, no se reintentan — un rechazo del rate limiter ya no se reintenta ni cuenta contra el circuit breaker
+- **Retry** se ejecuta después de que RateLimiter deja pasar la llamada, y envuelve todo lo de adentro (CircuitBreaker, Bulkhead, Hedge)
+- **Timeout** aplica por intento (dentro de Retry)
+- **CircuitBreaker** se ubica entre Timeout y Bulkhead — un circuito abierto corta antes de tomar un slot del bulkhead
+- **Hedge** corre la operación real, potencialmente en paralelo, como la política más interna
 
 ## Combinaciones Comunes
 
@@ -82,7 +90,7 @@ var policy = ResiliencePresets.ForCritical(fallbackValue: "default");
 
 :::tip Principios de Diseño
 1. **Siempre agrega Fallback** cuando el caller no puede manejar excepciones
-2. **CircuitBreaker antes de Retry** (ya forzado por el orden) — el CB previene reintentos contra un circuito abierto
+2. **Retry envuelve a CircuitBreaker** (forzado por el orden de ejecución) — cada intento de retry pasa por el circuit breaker, así que un circuito abierto corta intentos individuales en vez de dejar que todos fallen lentamente
 3. **Timeout aplica por intento de retry** — 5s timeout con 3 reintentos = hasta 15s total + backoff
 4. **Hedge reduce la latencia P99** — no recuperación de errores
 5. **Usa CircuitKey** para compartir estado entre múltiples operaciones al mismo servicio

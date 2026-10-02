@@ -48,6 +48,56 @@ public record ProcessPaymentCommand(
 }
 ```
 
+## Alcance (Scope) por Usuario/Tenant
+
+Retorná la identidad del caller desde `IdempotencyScope` cuando la clave venga del cliente — si no, dos usuarios distintos enviando el mismo valor de clave compartirían la misma respuesta:
+
+```csharp
+public record ProcessPaymentCommand(
+    Guid OrderId,
+    decimal Amount,
+    string CardToken,
+    string UserId) : IRequest<Result<string>>, IIdempotent
+{
+    public string IdempotencyKey => $"payment:{OrderId}";
+    public TimeSpan Expiration => TimeSpan.FromHours(24);
+    public string? IdempotencyScope => UserId;
+}
+```
+
+## Manejo de un Conflicto de Payload
+
+Se almacena un fingerprint SHA-256 del request serializado junto con la respuesta. Si la misma clave llega de nuevo con un payload *distinto*, el behavior lanza `IdempotencyConflictException` — o, cuando el handler retorna `Result`/`Result<T>`, devuelve directamente un fallo `Conflict` en lugar de lanzar:
+
+```csharp
+try
+{
+    var result = await mediator.Send(command);
+}
+catch (IdempotencyConflictException ex)
+{
+    // ex.IdempotencyKey — misma clave, distinto body: responder 409 Conflict
+}
+```
+
+Desactivá esta verificación (para requests que legítimamente llevan campos volátiles, como un timestamp) con `IdempotencyOptions.VerifyRequestFingerprint = false`.
+
+## Reserva Atómica Entre Instancias
+
+Cuando `SupportsReservation` del store es `true` (el `InMemoryIdempotencyStore` incluido lo es), la clave se reserva *antes* de que el handler corra. Si dos instancias que comparten el mismo store reciben la misma clave al mismo tiempo, solo una ejecuta realmente el handler — la otra espera la reserva y luego repite su resultado en lugar de correr el trabajo dos veces. Esto se verificó con dos procesos reales compartiendo Redis bajo carga.
+
+```csharp
+builder.Services.AddIdempotencyOptions(options =>
+{
+    options.MaxKeyLength = 256;                               // rechaza claves/scopes más largos
+    options.VerifyRequestFingerprint = true;                  // desactivar para requests con campos volátiles
+    options.ReservationLease = TimeSpan.FromSeconds(30);       // debe superar la duración máxima del handler
+    options.ReservationWaitTimeout = TimeSpan.FromSeconds(30); // cuánto espera un caller antes de desistir
+});
+```
+
+Si otra instancia todavía sostiene la reserva después de `ReservationWaitTimeout`, el caller que espera recibe un `IdempotencyInProgressException`.
+
 ## Patrón de Uso con API HTTP
 
 ```csharp
